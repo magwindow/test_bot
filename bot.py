@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import time
+import datetime
 
 from aiogram import F, Bot, Dispatcher, types
 from aiogram.filters import CommandStart
@@ -17,6 +19,10 @@ dp = Dispatcher()
 db = Database('users.db')
 
 
+def days_to_seconds(days):
+    return days * 86400
+
+
 @dp.message(CommandStart())
 async def start(message: types.Message):
     if not db.user_exists(message.from_user.id):
@@ -24,6 +30,18 @@ async def start(message: types.Message):
         await bot.send_message(message.from_user.id, 'Укажите никнейм')
     else:
         await bot.send_message(message.from_user.id, 'Вы уже зарегистрированы', reply_markup=main_menu)
+        
+@dp.pre_checkout_query()
+async def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):
+    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+    
+
+@dp.message(F.content_type == ContentType.SUCCESSFUL_PAYMENT)
+async def process_payment(message: types.Message):
+    if message.successful_payment.invoice_payload == 'month_sub':
+        time_sub = int(time.time()) + days_to_seconds(30)
+        db.set_time_sub(message.from_user.id, time_sub)
+        await bot.send_message(message.from_user.id, 'Платеж прошел успешно!\nВам выдана подписка на 1 месяц', reply_markup=main_menu)
     
 @dp.message()
 async def bot_message(message: types.Message):
@@ -60,17 +78,7 @@ async def submonth(call: types.CallbackQuery):
         currency='rub',
         prices=[types.LabeledPrice(label='RUB', amount=15000)]
     )
-    
-@dp.pre_checkout_query()
-async def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):
-    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
-    
-
-@dp.message(F.content_type == ContentType.SUCCESSFUL_PAYMENT)
-async def process_payment(message: types.Message):
-    await bot.send_message(message.from_user.id, 'Платеж прошел успешно')
-    
-    
+      
 async def main():
     await dp.start_polling(bot)
 

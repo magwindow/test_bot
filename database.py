@@ -1,3 +1,4 @@
+import time
 import sqlite3
 
 class Database:
@@ -35,6 +36,31 @@ class Database:
             for row in result:
                 signup = str(row[0])
             return signup
+        
+    def set_time_sub(self, user_id, time_sub):
+        with self.connection:
+            self.cursor.execute("UPDATE users SET time_sub = ? WHERE user_id = ?", (time_sub, user_id))
+            
+    def get_time_sub(self, user_id):
+        with self.connection:
+            result = self.cursor.execute("SELECT time_sub FROM users WHERE user_id = ?", (user_id,)).fetchall()
+            for row in result:
+                time_sub = int(row[0])
+            return time_sub
+        
+    def get_sub_status(self, user_id):
+        with self.connection:
+            result = self.cursor.execute("SELECT time_sub FROM users WHERE user_id = ?", (user_id,)).fetchall()
+            for row in result:
+                time_sub = int(row[0])
+                
+            if time_sub > int(time.time()):    
+                return True
+            else:
+                return False
+                
+                
+            
         
     
             
