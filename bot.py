@@ -7,25 +7,45 @@ from aiogram.enums import ContentType
 
 from config import TOKEN, PAYMASTER_TEST
 from keyboards import main_menu, sub_inline_markup
+from database import Database
 
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
+db = Database('users.db')
+
 
 @dp.message(CommandStart())
 async def start(message: types.Message):
-    await message.answer('Привет, {0.first_name}!'.format(message.from_user), reply_markup=main_menu)
+    if not db.user_exists(message.from_user.id):
+        db.add_user(message.from_user.id)
+        await bot.send_message(message.from_user.id, 'Укажите никнейм')
+    else:
+        await bot.send_message(message.from_user.id, 'Вы уже зарегистрированы', reply_markup=main_menu)
     
-
-
-@dp.message(F.text == '❤️ Подписаться')
+@dp.message()
 async def bot_message(message: types.Message):
-    print(message.chat.type)
     if message.chat.type == 'private':
-        await bot.send_message(message.from_user.id, 'Выберите подписку', reply_markup=sub_inline_markup)
-
+        if message.text == '❤️ Подписаться':
+            await bot.send_message(message.from_user.id, 'Выберите подписку', reply_markup=sub_inline_markup)
+        elif message.text == '👤 Мой профиль':
+            signup = db.get_signup(message.from_user.id)
+            await bot.send_message(message.from_user.id, f'Ваш никнейм: {db.get_nickname(message.from_user.id)}\nВаша подписка: {signup}')
+        else:
+            if db.get_signup(message.from_user.id) == 'setnickname':
+                if len(message.text) > 15:
+                    await bot.send_message(message.from_user.id, 'Никнейм не должен превышать 15 символов')
+                elif '@' in message.text or '/' in message.text:
+                    await bot.send_message(message.from_user.id, 'Никнейм не должен содержать @ или /')
+                else:
+                    db.set_nickname(message.from_user.id, message.text)
+                    db.set_signup(message.from_user.id, 'active')
+                    await bot.send_message(message.from_user.id, 'Вы успешно зарегистрировались', reply_markup=main_menu)
+            else:
+                await bot.send_message(message.from_user.id, 'Что-то пошло не так', reply_markup=main_menu)
+                    
 
 @dp.callback_query(F.data == 'submonth')
 async def submonth(call: types.CallbackQuery):

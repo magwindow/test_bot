@@ -6,7 +6,7 @@ main_menu = ReplyKeyboardMarkup(
     keyboard=[
         [
             KeyboardButton(text='❤️ Подписаться'),
-            KeyboardButton(text='⚙️ Настройки')
+            KeyboardButton(text='👤 Мой профиль')
         ]
     ],
     resize_keyboard=True
