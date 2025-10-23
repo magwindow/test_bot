@@ -22,6 +22,13 @@ db = Database('users.db')
 def days_to_seconds(days):
     return days * 86400
 
+def time_sub_day(get_time):
+    time_now = int(time.time())
+    middle_time = int(get_time) - time_now
+    if middle_time <= 0:
+        return False
+    else:
+        return str(datetime.timedelta(seconds=middle_time)).replace('days', 'дней').replace('day', 'день')
 
 @dp.message(CommandStart())
 async def start(message: types.Message):
@@ -48,9 +55,22 @@ async def bot_message(message: types.Message):
     if message.chat.type == 'private':
         if message.text == '❤️ Подписаться':
             await bot.send_message(message.from_user.id, 'Выберите подписку', reply_markup=sub_inline_markup)
+        
         elif message.text == '👤 Мой профиль':
-            signup = db.get_signup(message.from_user.id)
-            await bot.send_message(message.from_user.id, f'Ваш никнейм: {db.get_nickname(message.from_user.id)}\nВаша подписка: {signup}')
+            user_sub = time_sub_day(db.get_time_sub(message.from_user.id))
+            if not user_sub:
+                await bot.send_message(message.from_user.id, f'Ваш никнейм: {db.get_nickname(message.from_user.id)}\n'
+                                       f'Ваша подписка: неактивна', reply_markup=main_menu)
+            else:
+                await bot.send_message(message.from_user.id, f'Ваш никнейм: {db.get_nickname(message.from_user.id)}\n'
+                                       f'Ваша подписка: {user_sub}', reply_markup=main_menu)
+        
+        elif message.text == '👥 Список пользователей':
+            if db.get_sub_status(message.from_user.id):
+                await bot.send_message(message.from_user.id, 'Список пользователей:', reply_markup=main_menu)
+            else:
+                await bot.send_message(message.from_user.id, 'Сначала оформите подписку', reply_markup=main_menu)
+        
         else:
             if db.get_signup(message.from_user.id) == 'setnickname':
                 if len(message.text) > 15:
