@@ -2,13 +2,14 @@ import asyncio
 import logging
 import time
 import datetime
+import random
 
 from aiogram import F, Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from aiogram.enums import ContentType
 
 from config import TOKEN, PAYMASTER_TEST, CHANNEL_ID
-from keyboards import main_menu, sub_inline_markup, sub_channel_markup
+from keyboards import main_menu, sub_inline_markup, sub_channel_markup, other_inline_menu
 from database import Database
 
 logging.basicConfig(level=logging.INFO)
@@ -81,6 +82,9 @@ async def bot_message(message: types.Message):
                     await bot.send_message(message.from_user.id, 'Список пользователей:', reply_markup=main_menu)
                 else:
                     await bot.send_message(message.from_user.id, 'Сначала оформите подписку', reply_markup=main_menu)
+                    
+            elif message.text == '👀 Другое':
+                await bot.send_message(message.from_user.id, 'Раздел другое:', reply_markup=other_inline_menu)
             
             else:
                 if db.get_signup(message.from_user.id) == 'setnickname':
@@ -123,7 +127,13 @@ async def subchannel(message: types.Message):
         else:
             await bot.send_message(message.from_user.id, 'Вы уже зарегистрированы', reply_markup=main_menu)
     else:
-        await bot.send_message(message.from_user.id, 'Вы не подписаны на канал', reply_markup=sub_channel_markup)    
+        await bot.send_message(message.from_user.id, 'Вы не подписаны на канал', reply_markup=sub_channel_markup)
+        
+
+@dp.callback_query(F.data == 'btn_random')
+async def randomize(message: types.Message):
+    await bot.delete_message(chat_id=message.from_user.id, message_id=message.message.message_id)
+    await bot.send_message(message.from_user.id, f'Случайное число: {random.randint(1, 100)}', reply_markup=other_inline_menu)    
 
       
 async def main():

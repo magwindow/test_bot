@@ -9,7 +9,8 @@ main_menu = ReplyKeyboardMarkup(
             KeyboardButton(text='👤 Мой профиль'),
         ],
         [
-            KeyboardButton(text='👥 Список пользователей')
+            KeyboardButton(text='👥 Список пользователей'),
+            KeyboardButton(text='👀 Другое')
         ]
     ],
     resize_keyboard=True
@@ -31,6 +32,20 @@ sub_channel_markup = InlineKeyboardMarkup(
             InlineKeyboardButton(text='Подписаться', url='https://t.me/test_channel_test_test24'),
             InlineKeyboardButton(text='✅ Уже подписан', callback_data='subchannel')
         ]
+    ]
+)
+
+# other inline buttons
+other_inline_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text='👉 Перейти на канал', url='https://t.me/test_channel_test_test24'),
+            InlineKeyboardButton(text='📢 Поделиться с друзьями', switch_inline_query='Лучший бот в мире!'),
+        ],
+        [
+            InlineKeyboardButton(text='🔶 Рандомное число', callback_data='btn_random'),
+            InlineKeyboardButton(text='Что-то', switch_inline_query_current_chat='Тест'),
+        ],
     ]
 )
 
