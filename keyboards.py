@@ -1,5 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-
+from config import CHANNELS
 
 
 # main menu
@@ -26,15 +26,6 @@ sub_inline_markup = InlineKeyboardMarkup(
     ]
 )
 
-# subscribe inline channel
-sub_channel_markup = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [
-            InlineKeyboardButton(text='Подписаться', url='https://t.me/test_channel_test_test24'),
-            InlineKeyboardButton(text='✅ Уже подписан', callback_data='subchannel')
-        ]
-    ]
-)
 
 # other inline buttons
 other_inline_menu = InlineKeyboardMarkup(
@@ -50,7 +41,7 @@ other_inline_menu = InlineKeyboardMarkup(
     ]
 )
 
-
+# crypto buttons inline
 crypto_list_inline = InlineKeyboardMarkup(
     inline_keyboard=[
         [
@@ -60,5 +51,23 @@ crypto_list_inline = InlineKeyboardMarkup(
         ],
     ]
 )
+
+
+# subscribe inline channel
+sub_channel_markup = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text=CHANNELS[0][0], url=CHANNELS[0][2]),
+            InlineKeyboardButton(text=CHANNELS[1][0], url=CHANNELS[1][2]),
+            InlineKeyboardButton(text='✅ Уже подписан', callback_data='subchannel')
+        ]
+    ]
+)
+
+
+
+
+
+
 
 

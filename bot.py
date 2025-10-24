@@ -9,10 +9,11 @@ from aiogram.filters import Command, CommandStart
 from aiogram.enums import ContentType
 
 from bad_words import BAD_WORDS
-from config import ADMIN_ID, TOKEN, PAYMASTER_TEST, CHANNEL_ID, BOT_NICKNAME
+from config import ADMIN_ID, PAYMASTER_TEST, CHANNELS, BOT_NICKNAME, TOKEN
 from keyboards import (main_menu, sub_inline_markup, sub_channel_markup, other_inline_menu, crypto_list_inline)
 from database import Database
-from utils import check_sub_channel, days_to_seconds, time_sub_day
+from utils import days_to_seconds, time_sub_day
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -22,9 +23,18 @@ cg = CoinGeckoAPI()
 db = Database('users.db')
 
 
+async def check_sub_channels(channels, user_id):
+    """Проверка подписки на несколько каналов"""
+    for channel in channels:
+        chat_member = await bot.get_chat_member(chat_id=channel[1], user_id=user_id)
+        if chat_member.status == 'left':
+            return False
+    return True
+
+
 @dp.message(CommandStart())
 async def start(message: types.Message):
-    if check_sub_channel(await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=message.from_user.id)):
+    if await check_sub_channels(CHANNELS, message.from_user.id):
         if not db.user_exists(message.from_user.id):
             referrer_id = message.text[7:]
             if str(referrer_id).isdigit():
@@ -74,19 +84,11 @@ async def process_payment(message: types.Message):
         db.set_time_sub(message.from_user.id, time_sub)
         await bot.send_message(message.from_user.id, 'Платеж прошел успешно!\nВам выдана подписка на 1 месяц', reply_markup=main_menu)
     
+    
 @dp.message()
 async def bot_message(message: types.Message):
-    if check_sub_channel(await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=message.from_user.id)):
+    if await check_sub_channels(CHANNELS, message.from_user.id):
         if message.chat.type == 'private':
-            
-            # get crypto
-            name_crypto = ''
-            price_crypto = ''
-            for key, value in cg.get_price(ids=message.text, vs_currencies='usd').items():
-                name_crypto = key
-                price_crypto = value['usd']
-            
-            
             if message.text == '❤️ Подписаться':
                 await bot.send_message(message.from_user.id, 'Выберите подписку', reply_markup=sub_inline_markup)
             
@@ -112,11 +114,7 @@ async def bot_message(message: types.Message):
                 await bot.send_message(message.from_user.id, 'Раздел другое:', reply_markup=other_inline_menu)
                 
             elif message.text == '/crypto':
-                await bot.send_message(message.from_user.id, 'Выберите криптовалюту или напишите в чат название, например, Cardano', reply_markup=crypto_list_inline)
-            
-            elif message.text.lower() == name_crypto:
-                await bot.send_message(message.from_user.id, 
-                                       f'Стоимость {message.text}: {price_crypto}$', reply_markup=crypto_list_inline)
+                await bot.send_message(message.from_user.id, 'Выберите криптовалюту:', reply_markup=crypto_list_inline)
             
             else:
                 if db.get_signup(message.from_user.id) == 'setnickname':
@@ -166,7 +164,7 @@ async def submonth(call: types.CallbackQuery):
 async def subchannel(message: types.Message):
     await bot.delete_message(chat_id=message.from_user.id, message_id=message.message.message_id)
     
-    if check_sub_channel(await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=message.from_user.id)):
+    if await check_sub_channels(CHANNELS, message.from_user.id):
         if not db.user_exists(message.from_user.id):
             db.add_user(message.from_user.id)
             await bot.send_message(message.from_user.id, 'Укажите никнейм')

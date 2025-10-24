@@ -2,14 +2,6 @@ import datetime
 import time
 
 
-def check_sub_channel(chat_member):
-    """Проверка подписки на канал"""
-    if chat_member.status == 'left':
-        return False
-    else:
-        return True
-
-
 def days_to_seconds(days):
     """"Перевод дней в секунды"""
     return days * 86400
