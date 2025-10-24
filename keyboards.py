@@ -1,6 +1,7 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 
+
 # main menu
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
@@ -45,6 +46,17 @@ other_inline_menu = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(text='🔶 Рандомное число', callback_data='btn_random'),
             InlineKeyboardButton(text='Что-то', switch_inline_query_current_chat='Тест'),
+        ],
+    ]
+)
+
+
+crypto_list_inline = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text='Bitcoin', callback_data='cc_bitcoin'),
+            InlineKeyboardButton(text='Ethereum', callback_data='cc_ethereum'),
+            InlineKeyboardButton(text='Solana', callback_data='cc_solana'),
         ],
     ]
 )
