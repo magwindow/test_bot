@@ -8,6 +8,7 @@ from aiogram import F, Bot, Dispatcher, types
 from aiogram.filters import Command, CommandStart
 from aiogram.enums import ContentType
 
+from bad_words import BAD_WORDS
 from config import ADMIN_ID, TOKEN, PAYMASTER_TEST, CHANNEL_ID
 from keyboards import (main_menu, sub_inline_markup, sub_channel_markup, other_inline_menu, crypto_list_inline)
 from database import Database
@@ -47,8 +48,8 @@ async def send_all(message: types.Message):
                         db.set_active(row[0], 1)
                 except:
                     db.set_active(row[0], 0)
-            await bot.send_message(message.from_user.id, 'Сообщение отправлено всем пользователям', reply_markup=main_menu)
-        
+            await bot.send_message(message.from_user.id, 'Сообщение отправлено всем пользователям', reply_markup=main_menu)                
+
 @dp.pre_checkout_query()
 async def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):
     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
@@ -113,7 +114,14 @@ async def bot_message(message: types.Message):
                         db.set_signup(message.from_user.id, 'active')
                         await bot.send_message(message.from_user.id, 'Вы успешно зарегистрировались', reply_markup=main_menu)
                 else:
+                    # filter bad words
+                    for word in BAD_WORDS:
+                        if word in message.text.lower():
+                            await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
+                            await bot.send_message(message.from_user.id, 'Недопустимое сообщение', reply_markup=main_menu)
+                            return
                     await bot.send_message(message.from_user.id, 'Что-то пошло не так', reply_markup=main_menu)
+                    
     else:
         await bot.send_message(message.from_user.id, 'Вы не подписаны на канал', reply_markup=sub_channel_markup)
  
