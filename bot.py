@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import time
-import datetime
 import random
 from pycoingecko import CoinGeckoAPI
 
@@ -12,6 +11,7 @@ from aiogram.enums import ContentType
 from config import ADMIN_ID, TOKEN, PAYMASTER_TEST, CHANNEL_ID
 from keyboards import (main_menu, sub_inline_markup, sub_channel_markup, other_inline_menu, crypto_list_inline)
 from database import Database
+from utils import check_sub_channel, days_to_seconds, time_sub_day
 
 logging.basicConfig(level=logging.INFO)
 
@@ -20,24 +20,6 @@ dp = Dispatcher()
 cg = CoinGeckoAPI()
 db = Database('users.db')
 
-
-def check_sub_channel(chat_member):
-    if chat_member.status == 'left':
-        return False
-    else:
-        return True
-
-
-def days_to_seconds(days):
-    return days * 86400
-
-def time_sub_day(get_time):
-    time_now = int(time.time())
-    middle_time = int(get_time) - time_now
-    if middle_time <= 0:
-        return False
-    else:
-        return str(datetime.timedelta(seconds=middle_time)).replace('days', 'дней').replace('day', 'день')
 
 @dp.message(CommandStart())
 async def start(message: types.Message):
