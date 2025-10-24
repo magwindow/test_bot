@@ -9,7 +9,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.enums import ContentType
 
 from bad_words import BAD_WORDS
-from config import ADMIN_ID, TOKEN, PAYMASTER_TEST, CHANNEL_ID
+from config import ADMIN_ID, TOKEN, PAYMASTER_TEST, CHANNEL_ID, BOT_NICKNAME
 from keyboards import (main_menu, sub_inline_markup, sub_channel_markup, other_inline_menu, crypto_list_inline)
 from database import Database
 from utils import check_sub_channel, days_to_seconds, time_sub_day
@@ -26,11 +26,23 @@ db = Database('users.db')
 async def start(message: types.Message):
     if check_sub_channel(await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=message.from_user.id)):
         if not db.user_exists(message.from_user.id):
-            db.add_user(message.from_user.id)
+            referrer_id = message.text[7:]
+            if str(referrer_id).isdigit():
+                if str(referrer_id) != str(message.from_user.id):
+                    db.add_user(message.from_user.id, referrer_id)
+                    try:
+                        await bot.send_message(referrer_id, f'Ваш реферал {message.from_user.id} зарегистрировался')
+                    except:
+                        pass
+                else:
+                    db.add_user(message.from_user.id)
+            else:
+                db.add_user(message.from_user.id)
             await bot.send_message(message.from_user.id, 'Укажите никнейм')
         else:
             if message.from_user.id == ADMIN_ID:
                 await bot.send_message(message.from_user.id, 'Вы администратор. Введите /sendall <Сообщение> чтобы начать рассылку.', reply_markup=main_menu)
+            
             await bot.send_message(message.from_user.id, 'Вы уже зарегистрированы\n'
                                    'Чтобы узнать текущую стоимость криптовалюты, введите /crypto', reply_markup=main_menu)
     else:
@@ -82,10 +94,13 @@ async def bot_message(message: types.Message):
                 user_sub = time_sub_day(db.get_time_sub(message.from_user.id))
                 if not user_sub:
                     await bot.send_message(message.from_user.id, f'Ваш никнейм: {db.get_nickname(message.from_user.id)}\n'
-                                        f'Ваша подписка: неактивна', reply_markup=main_menu)
+                                        f'Ваша подписка: неактивна\n\nРеферальная ссылка:\nhttps://t.me/{BOT_NICKNAME}?start={message.from_user.id}\n'
+                                        f'Количество рефералов: {db.count_referals(message.from_user.id)}', reply_markup=main_menu)
                 else:
                     await bot.send_message(message.from_user.id, f'Ваш никнейм: {db.get_nickname(message.from_user.id)}\n'
-                                        f'Ваша подписка: {user_sub}', reply_markup=main_menu)
+                                        f'Ваша подписка: {user_sub}\n\nРеферальная ссылка:\nhttps://t.me/{BOT_NICKNAME}?start={message.from_user.id}\n'
+                                        f'Количество рефералов: {db.count_referals(message.from_user.id)}', reply_markup=main_menu)
+                
             
             elif message.text == '👥 Список пользователей':
                 if db.get_sub_status(message.from_user.id):

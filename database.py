@@ -6,9 +6,12 @@ class Database:
         self.connection = sqlite3.connect(database_file)
         self.cursor = self.connection.cursor()
         
-    def add_user(self, user_id):
+    def add_user(self, user_id, referrer_id=None):
         with self.connection:
-            self.cursor.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
+            if referrer_id != None:
+                self.cursor.execute("INSERT INTO users (user_id, referrer_id) VALUES (?, ?)", (user_id, referrer_id))
+            else:
+                self.cursor.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
             
     def user_exists(self, user_id):
         with self.connection:
@@ -66,6 +69,12 @@ class Database:
     def get_users(self):
         with self.connection:
             return self.cursor.execute("SELECT user_id, active FROM users").fetchall()
+        
+    def count_referals(self, user_id):
+        with self.connection:
+            return self.cursor.execute("SELECT COUNT(id) as count FROM users WHERE referrer_id = ?", (user_id,)).fetchone()[0]
+            
+            
                
                 
             
