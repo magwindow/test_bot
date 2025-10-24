@@ -6,10 +6,10 @@ import random
 from pycoingecko import CoinGeckoAPI
 
 from aiogram import F, Bot, Dispatcher, types
-from aiogram.filters import CommandStart
+from aiogram.filters import Command, CommandStart
 from aiogram.enums import ContentType
 
-from config import TOKEN, PAYMASTER_TEST, CHANNEL_ID
+from config import ADMIN_ID, TOKEN, PAYMASTER_TEST, CHANNEL_ID
 from keyboards import (main_menu, sub_inline_markup, sub_channel_markup, other_inline_menu, crypto_list_inline)
 from database import Database
 
@@ -46,10 +46,26 @@ async def start(message: types.Message):
             db.add_user(message.from_user.id)
             await bot.send_message(message.from_user.id, 'Укажите никнейм')
         else:
+            if message.from_user.id == ADMIN_ID:
+                await bot.send_message(message.from_user.id, 'Вы администратор. Введите /sendall <Сообщение> чтобы начать рассылку.', reply_markup=main_menu)
             await bot.send_message(message.from_user.id, 'Вы уже зарегистрированы\n'
                                    'Чтобы узнать текущую стоимость криптовалюты, введите /crypto', reply_markup=main_menu)
     else:
         await bot.send_message(message.from_user.id, 'Вы не подписаны на канал', reply_markup=sub_channel_markup)
+        
+
+@dp.message(Command('sendall'))
+async def send_all(message: types.Message):
+    if message.chat.type == 'private':
+        if message.from_user.id == ADMIN_ID:
+            for row in db.get_users():
+                try:
+                    await bot.send_message(row[0], message.text[9:])
+                    if int(row[1]) != 1:
+                        db.set_active(row[0], 1)
+                except:
+                    db.set_active(row[0], 0)
+            await bot.send_message(message.from_user.id, 'Сообщение отправлено всем пользователям', reply_markup=main_menu)
         
 @dp.pre_checkout_query()
 async def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):
@@ -67,6 +83,8 @@ async def process_payment(message: types.Message):
 async def bot_message(message: types.Message):
     if check_sub_channel(await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=message.from_user.id)):
         if message.chat.type == 'private':
+            
+            # get crypto
             name_crypto = ''
             price_crypto = ''
             for key, value in cg.get_price(ids=message.text, vs_currencies='usd').items():
@@ -160,6 +178,7 @@ async def randomize(message: types.Message):
 
       
 async def main():
+    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 
