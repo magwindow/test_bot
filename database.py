@@ -73,6 +73,21 @@ class Database:
     def count_referals(self, user_id):
         with self.connection:
             return self.cursor.execute("SELECT COUNT(id) as count FROM users WHERE referrer_id = ?", (user_id,)).fetchone()[0]
+        
+    
+    def get_question(self):
+        with self.connection:
+            result = self.cursor.execute("SELECT id, questions FROM support", ()).fetchall()
+            data = {}
+            for row in result:
+                questions = tuple(row[1].split(':'))
+                data[row[0]] = questions
+            return data
+        
+    def get_answer(self, answer_id):
+        with self.connection:
+            return self.cursor.execute("SELECT answer FROM support WHERE id = ?", (answer_id,)).fetchone()[0]
+            
             
             
                

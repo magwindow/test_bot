@@ -12,7 +12,7 @@ from bad_words import BAD_WORDS
 from config import ADMIN_ID, PAYMASTER_TEST, CHANNELS, BOT_NICKNAME, TOKEN
 from keyboards import (main_menu, sub_inline_markup, sub_channel_markup, other_inline_menu, crypto_list_inline)
 from database import Database
-from utils import days_to_seconds, time_sub_day
+from utils import days_to_seconds, recognize_question, time_sub_day
 
 
 logging.basicConfig(level=logging.INFO)
@@ -89,6 +89,10 @@ async def process_payment(message: types.Message):
 async def bot_message(message: types.Message):
     if await check_sub_channels(CHANNELS, message.from_user.id):
         if message.chat.type == 'private':
+            answer_id = recognize_question(message.text, db.get_question())
+            await bot.send_message(message.from_user.id, db.get_answer(answer_id), reply_markup=main_menu)
+            
+            
             if message.text == '❤️ Подписаться':
                 await bot.send_message(message.from_user.id, 'Выберите подписку', reply_markup=sub_inline_markup)
             
@@ -133,7 +137,6 @@ async def bot_message(message: types.Message):
                             await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
                             await bot.send_message(message.from_user.id, 'Недопустимое сообщение', reply_markup=main_menu)
                             return
-                    await bot.send_message(message.from_user.id, 'Что-то пошло не так', reply_markup=main_menu)
                     
     else:
         await bot.send_message(message.from_user.id, 'Вы не подписаны на канал', reply_markup=sub_channel_markup)
