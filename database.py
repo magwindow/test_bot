@@ -6,12 +6,12 @@ class Database:
         self.connection = sqlite3.connect(database_file)
         self.cursor = self.connection.cursor()
         
-    def add_user(self, user_id, referrer_id=None):
+    def add_user(self, user_id, referrer_id=None, lang='ru'):
         with self.connection:
             if referrer_id != None:
-                self.cursor.execute("INSERT INTO users (user_id, referrer_id) VALUES (?, ?)", (user_id, referrer_id))
+                self.cursor.execute("INSERT INTO users (user_id, referrer_id, lang) VALUES (?, ?, ?)", (user_id, referrer_id, lang))
             else:
-                self.cursor.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
+                self.cursor.execute("INSERT INTO users (user_id, lang) VALUES (?, ?)", (user_id, lang))
             
     def user_exists(self, user_id):
         with self.connection:
@@ -87,6 +87,15 @@ class Database:
     def get_answer(self, answer_id):
         with self.connection:
             return self.cursor.execute("SELECT answer FROM support WHERE id = ?", (answer_id,)).fetchone()[0]
+        
+    def get_lang(self, user_id):
+        with self.connection:
+            return self.cursor.execute("SELECT lang FROM users WHERE user_id = ?", (user_id,)).fetchone()[0]
+        
+    def change_lang(self, user_id, lang):
+        with self.connection:
+            self.cursor.execute("UPDATE users SET lang = ? WHERE user_id = ?", (lang, user_id))
+            
             
             
             

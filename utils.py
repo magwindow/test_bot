@@ -1,6 +1,22 @@
 import time
 import datetime
+import requests
 from fuzzywuzzy import fuzz
+
+from init_bot import bot
+from translations import translate
+
+
+def _(text, lang='ru'):
+    """Перевод текста"""
+    if lang == 'ru':
+        return text
+    else:
+        global translate
+        try:
+            return translate[lang][text]
+        except:
+            return text
 
 
 def days_to_seconds(days):
@@ -27,3 +43,31 @@ def recognize_question(question, questions):
                 recognized['id'] = key
                 recognized['percent'] = percent
     return recognized['id']
+
+
+def get_rate():
+    """"Получение курса валют"""
+    url = 'https://www.cbr-xml-daily.ru/daily_json.js'
+    response = requests.get(url)
+    return round(response.json()['Valute']['USD']['Value'], 2)
+
+
+async def check_sub_channels(channels, user_id):
+    """Проверка подписки на несколько каналов"""
+    for channel in channels:
+        chat_member = await bot.get_chat_member(chat_id=channel[1], user_id=user_id)
+        if chat_member.status == 'left':
+            return False
+    return True
+
+
+
+    
+
+
+
+
+
+
+
+
